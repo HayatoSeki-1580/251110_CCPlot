@@ -13,7 +13,6 @@
     
     <style>
         body {
-            /* ★ 修正: Inter と日本語フォントを明示 */
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
         }
         .chart-container {
@@ -22,7 +21,6 @@
             height: 500px;
         }
 
-        /* ★ 修正: スライダーのカスタムスタイルを復活 (洗練されたUIのため) */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -42,7 +40,7 @@
             appearance: none;
             width: 20px;
             height: 20px;
-            background: #4F46E5; /* ★ 修正: indigo-600 */
+            background: #4F46E5; /* indigo-600 */
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid white;
@@ -51,18 +49,18 @@
         input[type="range"]::-moz-range-thumb {
             width: 20px;
             height: 20px;
-            background: #4F46E5; /* ★ 修正: indigo-600 */
+            background: #4F46E5; /* indigo-600 */
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid white;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        /* === SVG 回路図スタイル (既存) === */
+        /* === SVG 回路図スタイル === */
         .circuit-component {
             stroke: black;
             stroke-width: 2;
-            fill: white; /* デフォルトは白塗り */
+            fill: white; 
         }
         .circuit-line {
             stroke: black;
@@ -73,7 +71,6 @@
             fill: black;
             stroke: black;
         }
-        /* 色分け (stroke のみ変更) */
         .circuit-color-1 { stroke: #059669; } /* green-600 */
         .circuit-color-2 { stroke: #DB2777; } /* pink-600 */
         .circuit-color-3 { stroke: #D97706; } /* amber-600 */
@@ -83,7 +80,7 @@
         .legend-html {
             display: flex;
             align-items: center;
-            gap: 0.5rem; /* 隙間 */
+            gap: 0.5rem; 
         }
         .legend-html svg {
             width: 50px;
@@ -103,17 +100,13 @@
             </g>
             <!-- コンデンサ (C) -->
             <g id="component-capacitor">
-                <!-- 導線を隠すための背景 -->
                 <rect x="-8" y="-15" width="16" height="30" fill="white" stroke="none" />
-                <!-- プレート -->
                 <path d="M -5 -15 v 30" />
                 <path d="M 5 -15 v 30" />
             </g>
             <!-- コイル (L) -->
-            <g id="component-inductor" fill="none"> <!-- コイルは fill:none -->
-                 <!-- 導線を隠すための背景 -->
+            <g id="component-inductor" fill="none">
                 <rect x="-15" y="-10" width="30" height="20" fill="white" stroke="none" />
-                <!-- 半円 (片側) -->
                 <path d="M -15 0 a 5,5 0 0,1 10,0 a 5,5 0 0,1 10,0 a 5,5 0 0,1 10,0" />
             </g>
         </defs>
@@ -122,7 +115,6 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="mb-6">
-            <!-- ★ 修正: text-blue-700 -> text-indigo-600 -->
             <h1 class="text-3xl md:text-4xl font-bold text-indigo-600">汎用RCL回路 ネットリスト・シミュレータ</h1>
             <p class="text-gray-600 mt-2">ネットリストで回路を記述し、インピーダンス(R-X)プロット（ナイキストプロット）を描画します。</p>
         </header>
@@ -132,11 +124,9 @@
             <!-- ============================== -->
             <!--   設定パネル (左側)            -->
             <!-- ============================== -->
-            <!-- ★ 修正: space-y-6 を追加 -->
             <div class="lg:w-2/5 w-full bg-white p-6 rounded-xl shadow-lg space-y-6">
                 
                 <!-- 1. 回路プリセット選択 -->
-                <!-- ★ 修正: mb-5 削除 -->
                 <section>
                     <label for="circuit-preset" class="block text-lg font-medium text-gray-700 mb-2">1. 回路プリセット</label>
                     <p class="text-sm text-gray-600 mb-2">代表的な回路をエディタに読み込みます。</p>
@@ -147,6 +137,15 @@
                         <option value="rlc-series">直列 RLC (R + L + C)</option>
                         <option value="rlc-parallel">並列 RLC (R || L || C)</option>
                         <option value="rc-rc-series">RC並列 x 2 (直列接続)</option>
+                    </select>
+                    
+                    <!-- ★ ここに追加 -->
+                    <label for="plot-steps" class="block text-sm font-medium text-gray-700 mt-4 mb-2">データ点数</label>
+                    <select id="plot-steps" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="100">100 点</option>
+                        <option value="1000" selected>1000 点</option>
+                        <option value="10000">10000 点</option>
+                        <option value="100000">100000 点</option>
                     </select>
                 </section>
 
@@ -161,7 +160,6 @@
                 </div>
 
                 <!-- 2. 素子パラメータ設定 -->
-                <!-- ★ 修正: mb-5 削除 -->
                 <section id="parameter-section">
                     <h2 class="text-lg font-medium text-gray-700 mb-4">2. 素子パラメータ設定</h2>
                     <div id="parameter-inputs" class="space-y-5">
@@ -170,7 +168,6 @@
                 </section>
 
                 <!-- 3. 周波数ポイント確認 -->
-                <!-- ★ 修正: mb-5 削除 -->
                 <section id="freq-slider-section">
                     <h2 class="text-lg font-medium text-gray-700 mb-4">3. 周波数ポイント確認</h2>
                     <p class="text-sm text-gray-600 mb-3">スライダーを動かすと、グラフ上の対応する点がハイライトされます。</p>
@@ -179,9 +176,8 @@
                     <div class="space-y-1">
                         <div class="flex justify-between items-center">
                             <label for="freq-slider" class="block text-sm font-medium text-gray-700">
-                                周波数ポイント
+                                周波数
                             </label>
-                            <!-- ★ 修正: text-blue-600 -> text-indigo-600 -->
                             <span id="freq-slider-step" class="text-sm font-medium text-indigo-600">
                                 1.00 Hz
                             </span>
@@ -189,10 +185,10 @@
                         <input type="range"
                             id="freq-slider"
                             min="0"
-                            max="999"
+                            max="999" <!-- ★ ここは setupFrequencySlider で動的に更新されます -->
                             step="1"
                             value="0"
-                            class="w-full accent-indigo-600" <!-- ★ 修正: accent-indigo-600 追加 -->
+                            class="w-full accent-indigo-600"
                             disabled
                         >
                     </div>
@@ -222,7 +218,6 @@
         </div> <!-- flex container の終わり -->
 
         <!-- 凡例セクション -->
-        <!-- ★ 修正: bg-white -> bg-gray-50 (わずかにトーンを変更) -->
         <footer class="mt-8 bg-gray-50 p-6 rounded-xl shadow-lg">
             <h2 class="text-lg font-medium text-gray-700 mb-4">回路図記号 凡例</h2>
             <div class="flex flex-wrap gap-x-8 gap-y-4">
@@ -263,8 +258,6 @@
         let coleColeChart = null;
         const ctx = document.getElementById('coleColePlotChart').getContext('2d');
         const math = window.math; // math.js
-        // ★ 修正: debouncedRunSimulation を削除 (スライダーフリーズ対策)
-        // let debounceTimer = null; 
         let currentPlotData = []; 
 
         // --- DOM要素 ---
@@ -273,12 +266,13 @@
         const legendDiv = document.getElementById('circuit-legend');
         const parameterInputsDiv = document.getElementById('parameter-inputs');
         const errorMessageDiv = document.getElementById('error-message');
+        // ★ 追加
+        const plotStepsSelect = document.getElementById('plot-steps');
         const freqSlider = document.getElementById('freq-slider');
         const freqSliderStep = document.getElementById('freq-slider-step');
         const freqInfoDiv = document.getElementById('freq-info');
 
         // --- 回路図プリセット (SVG) ---
-        // [回路図定義 ... 既存コード ... (省略)]
         const circuitDiagrams = {
             'rc-series': `
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
@@ -345,9 +339,7 @@
                 </svg>`
         };
 
-
         // --- 凡例のHTML定義 ---
-        // [凡例定義 ... 既存コード ... (省略)]
         const presetLegends = {
             'randles': `
                 <div class="legend-html">
@@ -386,8 +378,7 @@
         };
 
         
-        
-        // [プリセット定義 ... 既存コード ... (省略)]
+        // --- プリセット定義 (スライダー用) ---
         /* label, unit, scale を明確化 */
         const presets = {
             'rc-series': {
@@ -401,7 +392,6 @@
                     { name: 'R1', label: 'R1', unit: 'Ω', min: 1, max: 1000, step: 1, value: 100, scale: 1 },
                     { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 }
                 ],
-                // paramUnitScale は parameters に統合
             },
             'rc-parallel': {
                 diagram: circuitDiagrams['rc-parallel'],
@@ -487,7 +477,7 @@
                 const presetConfig = presets[presetKey];
 
                 const components = [];
-                const nodeSet = new Set(['n1', 'gnd']); // n1とgndは必須
+                const nodeSet = new Set(['n1', 'gnd']); 
 
                 // スライダーの値から components リストを構築
                 presetConfig.components.forEach(comp => {
@@ -519,7 +509,8 @@
                 const groundNode = "gnd";
                 const f_start = 1;      // 1 Hz
                 const f_end = 1e6;    // 1 MHz
-                const steps = 1000;
+                // ★ 修正: ハードコードされた 1000 を、プルダウンから取得するように変更
+                const steps = parseInt(plotStepsSelect.value, 10);
                 const scale = "log";
 
                 if (components.length === 0) {
@@ -546,7 +537,7 @@
             }
         }
 
-        // ★ 修正: スライダーイベントリスナー設定
+        // スライダーイベントリスナー設定
         function setupSliderListeners() {
             const presetKey = presetSelect.value;
             const presetConfig = presets[presetKey];
@@ -555,12 +546,10 @@
                 const slider = document.getElementById(`slider-${param.name}`);
                 const valueDisplay = document.getElementById(`value-${param.name}`);
                 
-                // ドラッグ中の処理: テキスト表示のみ更新
                 slider.addEventListener('input', () => {
                     valueDisplay.textContent = slider.value + ' ' + param.unit;
                 });
 
-                // 手を離した時の処理: シミュレーション実行
                 slider.addEventListener('change', () => {
                     runSimulation();
                 });
@@ -594,7 +583,6 @@
                             <label for="slider-${param.name}" class="block text-sm font-medium text-gray-700">
                                 ${param.label}
                             </label>
-                            <!-- ★ 修正: text-blue-600 -> text-indigo-600 -->
                             <span id="value-${param.name}" class="text-sm font-medium text-indigo-600">
                                 ${param.value} ${param.unit}
                             </span>
@@ -606,7 +594,7 @@
                             max="${param.max}"
                             step="${param.step}"
                             value="${param.value}"
-                            class="w-full accent-indigo-600" <!-- ★ 修正: accent-indigo-600 追加 -->
+                            class="w-full accent-indigo-600"
                         >
                     </div>
                 `;
@@ -619,6 +607,7 @@
             // 5. プリセット変更時に周波数スライダーをリセット
             freqSlider.disabled = true;
             freqSlider.value = 0;
+            // freqSlider.max は setupFrequencySlider で設定されるため、ここでは不要
             freqSliderStep.textContent = `1.00 Hz`;
             freqInfoDiv.classList.add('hidden');
 
@@ -628,7 +617,6 @@
         }
         
         // --- 周波数ポイント生成 ---
-        // [周波数生成 ... 既存コード ... (省略)]
         function generateFrequencies(start, end, steps, scale) {
             const freqs = [];
             if (steps <= 1) {
@@ -657,7 +645,6 @@
 
 
         // --- MNA行列の構築と計算 ---
-        // [MNA計算 ... 既存コード ... (省略)]
         function solveCircuit(components, nodeSet, freqs, inputNode, groundNode) {
             const plotData = [];
             
@@ -750,13 +737,11 @@
         function drawPlot(data) {
             currentPlotData = data;
 
-            // ★ 修正: グラフが既に存在する場合は、データを更新する
             if (coleColeChart) {
-                coleColeChart.data.datasets[0].data = data; // データセット0 (全データ) を更新
-                coleColeChart.data.datasets[1].data = [];   // ハイライト用データをクリア
-                coleColeChart.update(); // グラフを再描画
+                coleColeChart.data.datasets[0].data = data; 
+                coleColeChart.data.datasets[1].data = [];   
+                coleColeChart.update(); 
             } 
-            // グラフが存在しない場合 (初回ロード時) のみ、新しく作成する
             else {
                 if (coleColeChart) {
                     coleColeChart.destroy();
@@ -766,17 +751,17 @@
                     type: 'scatter',
                     data: {
                         datasets: [
-                            { // データセット 0: 全データ
+                            { 
                                 label: 'インピーダンス',
                                 data: data, 
-                                backgroundColor: 'rgba(59, 130, 246, 0.7)', // blue-500
-                                borderColor: 'rgba(59, 130, 246, 1)',
+                                backgroundColor: 'rgba(79, 70, 229, 0.7)', 
+                                borderColor: 'rgba(79, 70, 229, 1)', 
                                 pointRadius: 4,
                                 pointHoverRadius: 7,
                                 showLine: true,
                                 tension: 0.1
                             },
-                            { // データセット 1: ハイライト用
+                            { 
                                 label: '選択ポイント',
                                 data: [], 
                                 backgroundColor: 'rgba(239, 68, 68, 1)', // red-500
@@ -792,10 +777,10 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false // ★ 修正: 凡例を非表示
+                                display: false 
                             },
                             title: {
-                                display: false // ★ 修正: グラフタイトルを非表示
+                                display: false
                             },
                             tooltip: {
                                 filter: function(tooltipItem) {
@@ -824,11 +809,11 @@
                                     display: true,
                                     text: "レジスタンス R (Ω)",
                                     font: {
-                                        size: 16 // ★ 修正: フォントサイズ
+                                        size: 16 
                                     }
                                 },
                                 grace: '5%',
-                                // ★ 修正: ゼロ軸のみ強調 (関数を使用)
+                                suggestedMin: 0, 
                                 grid: {
                                     display: true, 
                                     drawOnChartArea: true, 
@@ -856,11 +841,10 @@
                                     display: true,
                                     text: "リアクタンス X (Ω)",
                                     font: {
-                                        size: 16 // ★ 修正: フォントサイズ
+                                        size: 16
                                     }
                                 },
                                 grace: '5%',
-                                // ★ 修正: ゼロ軸のみ強調 (関数を使用)
                                 grid: {
                                     display: true,
                                     drawOnChartArea: true, 
@@ -894,11 +878,10 @@
                 });
             } // else の終わり
 
-            // ★ 修正: グラフ描画(または更新)後に、必ず周波数スライダーをセットアップする
             setupFrequencySlider();
         }
 
-        // ★ 新規: 周波数をフォーマットするヘルパー関数
+        // 周波数をフォーマットするヘルパー関数
         function formatFrequency(hz) {
             if (hz < 1e3) {
                 return `${hz.toFixed(2)} Hz`;
@@ -911,7 +894,7 @@
             }
         }
 
-        // ★ 新規: 周波数スライダーのセットアップとイベント処理
+        // 周波数スライダーのセットアップとイベント処理
         function setupFrequencySlider() {
             if (!currentPlotData || currentPlotData.length === 0) {
                 freqSlider.disabled = true;
@@ -919,18 +902,18 @@
                 return;
             }
 
+            // ★ 修正: ハードコードされた 999 ではなく、実際のデータ長から maxIndex を設定
             const maxIndex = currentPlotData.length - 1;
             freqSlider.max = maxIndex;
             freqSlider.disabled = false;
             
-            // ★ 修正: スライダー操作中の処理 (テキストのみ更新)
-            const onSliderInput_Text = () => {
+            const onSliderInput = () => {
                 const index = parseInt(freqSlider.value, 10);
                 const point = currentPlotData[index];
                 if (!point) return;
 
                 // 1. スライダーの周波数表示を更新
-                freqSliderStep.textContent = formatFrequency(point.f); // ★ 修正
+                freqSliderStep.textContent = formatFrequency(point.f); 
 
                 // 2. 詳細情報を表示
                 freqInfoDiv.innerHTML = `
@@ -939,14 +922,8 @@
                     <strong>X (リアクタンス):</strong> ${point.y.toExponential(3)} Ω
                 `;
                 freqInfoDiv.classList.remove('hidden');
-            };
-
-            // ★ 修正: スライダー操作完了時の処理 (グラフを更新)
-            const onSliderChange_Graph = () => {
-                const index = parseInt(freqSlider.value, 10);
-                const point = currentPlotData[index];
-
-                // 1. グラフ上の点をハイライト (データセット1を更新)
+                
+                // 3. グラフ上の点をハイライト (データセット1を更新)
                 if (coleColeChart && point) {
                     coleColeChart.data.datasets[1].data = [point];
                     coleColeChart.update('none'); // アニメーションなしで即時更新
@@ -954,22 +931,22 @@
             };
 
             // 既存のリスナーを削除 (再描画時に備える)
-            freqSlider.removeEventListener('input', onSliderInput_Text);
-            freqSlider.removeEventListener('change', onSliderChange_Graph);
+            freqSlider.removeEventListener('input', onSliderInput);
+            freqSlider.removeEventListener('change', onSliderInput); 
             
-            // 新しいリスナーを追加
-            freqSlider.addEventListener('input', onSliderInput_Text);
-            freqSlider.addEventListener('change', onSliderChange_Graph);
+            freqSlider.addEventListener('input', onSliderInput);
 
             // 初期状態で0番目の情報を表示 (テキストとグラフ両方)
             freqSlider.value = 0;
-            onSliderInput_Text();
-            onSliderChange_Graph();
+            onSliderInput();
         }
 
 
         // --- イベントリスナー ---
         presetSelect.addEventListener('change', loadPreset);
+        // ★ 追加
+        plotStepsSelect.addEventListener('change', runSimulation);
+
 
         // --- 初期化 ---
         window.onload = () => {
