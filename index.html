@@ -75,6 +75,8 @@
         .circuit-color-2 { stroke: #DB2777; } /* pink-600 */
         .circuit-color-3 { stroke: #D97706; } /* amber-600 */
         .circuit-color-4 { stroke: #4F46E5; } /* indigo-600 */
+        .circuit-color-5 { stroke: #6D28D9; } /* purple-700 */
+
 
         /* 凡例用 (HTML) */
         .legend-html {
@@ -130,16 +132,25 @@
                 <section>
                     <label for="circuit-preset" class="block text-lg font-medium text-gray-700 mb-2">1. 回路プリセット</label>
                     <p class="text-sm text-gray-600 mb-2">代表的な回路をエディタに読み込みます。</p>
+                    
+                    <!-- ★ 修正: 並び順を変更 -->
                     <select id="circuit-preset" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="randles" selected>Randles回路 (R1 + (R2 || C1))</option>
-                        <option value="rc-series">直列 RC (R + C)</option>
-                        <option value="rc-parallel">並列 RC (R || C)</option>
-                        <option value="rlc-series">直列 RLC (R + L + C)</option>
-                        <option value="rlc-parallel">並列 RLC (R || L || C)</option>
-                        <option value="rc-rc-series">RC並列 x 2 (直列接続)</option>
+                        <option value="r-only" selected>Rのみ</option>
+                        <option value="c-only">Cのみ</option>
+                        <option value="l-only">Lのみ</option>
+                        <option value="rc-series">直列 RC</option>
+                        <option value="rl-series">直列 RL</option>
+                        <option value="cl-series">直列 CL</option>
+                        <option value="rlc-series">直列 RLC</option>
+                        <option value="cl-parallel">並列 CL</option>
+                        <option value="rl-parallel">並列 RL</option>
+                        <option value="rc-parallel">並列 RC</option>
+                        <option value="rlc-parallel">並列 RLC</option>
+                        <option value="randles">Randles回路</option>
+                        <option value="rc-rc-series">RC並列 x 2</option>
+                        <option value="randles-rc">Randles + 並列RC</option>
                     </select>
                     
-                    <!-- ★ ここに追加 -->
                     <label for="plot-steps" class="block text-sm font-medium text-gray-700 mt-4 mb-2">データ点数</label>
                     <select id="plot-steps" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         <option value="100">100 点</option>
@@ -185,7 +196,7 @@
                         <input type="range"
                             id="freq-slider"
                             min="0"
-                            max="999" <!-- ★ ここは setupFrequencySlider で動的に更新されます -->
+                            max="999" <!-- setupFrequencySlider で動的に更新 -->
                             step="1"
                             value="0"
                             class="w-full accent-indigo-600"
@@ -266,7 +277,6 @@
         const legendDiv = document.getElementById('circuit-legend');
         const parameterInputsDiv = document.getElementById('parameter-inputs');
         const errorMessageDiv = document.getElementById('error-message');
-        // ★ 追加
         const plotStepsSelect = document.getElementById('plot-steps');
         const freqSlider = document.getElementById('freq-slider');
         const freqSliderStep = document.getElementById('freq-slider-step');
@@ -274,6 +284,27 @@
 
         // --- 回路図プリセット (SVG) ---
         const circuitDiagrams = {
+            'r-only': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
+                    <path class="circuit-line" d="M0 30h160"/>
+                    <use href="#component-resistor" class="circuit-component" transform="translate(80 30)"/>
+                    <circle class="circuit-node" cx="0" cy="30" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="30" r="3"/>
+                </svg>`,
+            'c-only': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
+                    <path class="circuit-line" d="M0 30h160"/>
+                    <use href="#component-capacitor" class="circuit-component" transform="translate(80 30)"/>
+                    <circle class="circuit-node" cx="0" cy="30" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="30" r="3"/>
+                </svg>`,
+            'l-only': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
+                    <path class="circuit-line" d="M0 30h160"/>
+                    <use href="#component-inductor" class="circuit-component" transform="translate(80 30)"/>
+                    <circle class="circuit-node" cx="0" cy="30" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="30" r="3"/>
+                </svg>`,
             'rc-series': `
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
                     <path class="circuit-line" d="M0 30h160"/>
@@ -282,11 +313,47 @@
                     <circle class="circuit-node" cx="0" cy="30" r="3"/>
                     <circle class="circuit-node" cx="160" cy="30" r="3"/>
                 </svg>`,
+            'rl-series': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
+                    <path class="circuit-line" d="M0 30h160"/>
+                    <use href="#component-resistor" class="circuit-component" transform="translate(50 30)"/>
+                    <use href="#component-inductor" class="circuit-component" transform="translate(110 30)"/>
+                    <circle class="circuit-node" cx="0" cy="30" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="30" r="3"/>
+                </svg>`,
+            'cl-series': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60" class="max-w-full">
+                    <path class="circuit-line" d="M0 30h160"/>
+                    <use href="#component-capacitor" class="circuit-component" transform="translate(50 30)"/>
+                    <use href="#component-inductor" class="circuit-component" transform="translate(110 30)"/>
+                    <circle class="circuit-node" cx="0" cy="30" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="30" r="3"/>
+                </svg>`,
             'rc-parallel': `
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100" class="max-w-full">
                     <path class="circuit-line" d="M0 50h40 M160 50h40 M40 50v-30h120v30 M40 50v30h120v-30"/>
                     <use href="#component-resistor" class="circuit-component" transform="translate(100 20)"/>
                     <use href="#component-capacitor" class="circuit-component" transform="translate(100 80)"/>
+                    <circle class="circuit-node" cx="0" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="200" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="40" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="50" r="3"/>
+                </svg>`,
+            'rl-parallel': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100" class="max-w-full">
+                    <path class="circuit-line" d="M0 50h40 M160 50h40 M40 50v-30h120v30 M40 50v30h120v-30"/>
+                    <use href="#component-resistor" class="circuit-component" transform="translate(100 20)"/>
+                    <use href="#component-inductor" class="circuit-component" transform="translate(100 80)"/>
+                    <circle class="circuit-node" cx="0" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="200" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="40" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="50" r="3"/>
+                </svg>`,
+            'cl-parallel': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100" class="max-w-full">
+                    <path class="circuit-line" d="M0 50h40 M160 50h40 M40 50v-30h120v30 M40 50v30h120v-30"/>
+                    <use href="#component-capacitor" class="circuit-component" transform="translate(100 20)"/>
+                    <use href="#component-inductor" class="circuit-component" transform="translate(100 80)"/>
                     <circle class="circuit-node" cx="0" cy="50" r="3"/>
                     <circle class="circuit-node" cx="200" cy="50" r="3"/>
                     <circle class="circuit-node" cx="40" cy="50" r="3"/>
@@ -336,6 +403,24 @@
                     <circle class="circuit-node" cx="120" cy="50" r="3"/>
                     <circle class="circuit-node" cx="180" cy="50" r="3"/>
                     <circle class="circuit-node" cx="280" cy="50" r="3"/>
+                </svg>`,
+            'randles-rc': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 100" width="440" height="100" class="max-w-full">
+                    <path class="circuit-line" d="M0 50h80 M80 50h100 M280 50h20 M180 50v-30h100v30 M180 50v30h100v-30 M300 50h40 M420 50h20 M340 50v-30h80v30 M340 50v30h80v-30"/>
+                    <!-- Randles Part -->
+                    <use href="#component-resistor" class="circuit-component circuit-color-1" transform="translate(80 50)"/>
+                    <use href="#component-resistor" class="circuit-component circuit-color-2" transform="translate(230 20)"/>
+                    <use href="#component-capacitor" class="circuit-component circuit-color-3" transform="translate(230 80)"/>
+                    <!-- RC Part -->
+                    <use href="#component-resistor" class="circuit-component circuit-color-4" transform="translate(380 20)"/>
+                    <use href="#component-capacitor" class="circuit-component circuit-color-5" transform="translate(380 80)"/>
+                    <!-- Nodes -->
+                    <circle class="circuit-node" cx="0" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="440" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="180" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="280" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="340" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="420" cy="50" r="3"/>
                 </svg>`
         };
 
@@ -374,13 +459,65 @@
                         <svg viewBox="-15 -15 30 30"><use href="#component-capacitor" class="circuit-component circuit-color-4"/></svg>
                         <span>C2</span>
                     </div>
+                </div>`,
+            'randles-rc': `
+                <div class="legend-html" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-resistor" class="circuit-component circuit-color-1"/></svg>
+                        <span>R1</span>
+                    </div>
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-resistor" class="circuit-component circuit-color-2"/></svg>
+                        <span>R2</span>
+                    </div>
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-capacitor" class="circuit-component circuit-color-3"/></svg>
+                        <span>C1</span>
+                    </div>
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-resistor" class="circuit-component circuit-color-4"/></svg>
+                        <span>R3</span>
+                    </div>
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-capacitor" class="circuit-component circuit-color-5"/></svg>
+                        <span>C2</span>
+                    </div>
                 </div>`
         };
 
         
         // --- プリセット定義 (スライダー用) ---
-        /* label, unit, scale を明確化 */
         const presets = {
+            'r-only': {
+                diagram: circuitDiagrams['r-only'],
+                legend: null,
+                components: [
+                    { name: 'R1', type: 'r', n1: 'n1', n2: 'gnd', param: 'R1' }
+                ],
+                parameters: [
+                    { name: 'R1', label: 'R1', unit: 'Ω', min: 1, max: 1000, step: 1, value: 100, scale: 1 }
+                ]
+            },
+            'c-only': {
+                diagram: circuitDiagrams['c-only'],
+                legend: null,
+                components: [
+                    { name: 'C1', type: 'c', n1: 'n1', n2: 'gnd', param: 'C1' }
+                ],
+                parameters: [
+                    { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 }
+                ]
+            },
+            'l-only': {
+                diagram: circuitDiagrams['l-only'],
+                legend: null,
+                components: [
+                    { name: 'L1', type: 'l', n1: 'n1', n2: 'gnd', param: 'L1' }
+                ],
+                parameters: [
+                    { name: 'L1', label: 'L1', unit: 'mH', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e-3 }
+                ]
+            },
             'rc-series': {
                 diagram: circuitDiagrams['rc-series'],
                 legend: null,
@@ -393,6 +530,30 @@
                     { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 }
                 ],
             },
+            'rl-series': {
+                diagram: circuitDiagrams['rl-series'],
+                legend: null,
+                components: [
+                    { name: 'R1', type: 'r', n1: 'n1', n2: 'n2', param: 'R1' },
+                    { name: 'L1', type: 'l', n1: 'n2', n2: 'gnd', param: 'L1' }
+                ],
+                parameters: [
+                    { name: 'R1', label: 'R1', unit: 'Ω', min: 1, max: 1000, step: 1, value: 100, scale: 1 },
+                    { name: 'L1', label: 'L1', unit: 'mH', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e-3 }
+                ],
+            },
+            'cl-series': {
+                diagram: circuitDiagrams['cl-series'],
+                legend: null,
+                components: [
+                    { name: 'C1', type: 'c', n1: 'n1', n2: 'n2', param: 'C1' },
+                    { name: 'L1', type: 'l', n1: 'n2', n2: 'gnd', param: 'L1' }
+                ],
+                parameters: [
+                    { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 },
+                    { name: 'L1', label: 'L1', unit: 'mH', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e-3 }
+                ],
+            },
             'rc-parallel': {
                 diagram: circuitDiagrams['rc-parallel'],
                 legend: null,
@@ -403,6 +564,30 @@
                 parameters: [
                     { name: 'R1', label: 'R1', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e3 },
                     { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 }
+                ],
+            },
+            'rl-parallel': {
+                diagram: circuitDiagrams['rl-parallel'],
+                legend: null,
+                components: [
+                    { name: 'R1', type: 'r', n1: 'n1', n2: 'gnd', param: 'R1' },
+                    { name: 'L1', type: 'l', n1: 'n1', n2: 'gnd', param: 'L1' }
+                ],
+                parameters: [
+                    { name: 'R1', label: 'R1', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e3 },
+                    { name: 'L1', label: 'L1', unit: 'mH', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e-3 }
+                ],
+            },
+            'cl-parallel': {
+                diagram: circuitDiagrams['cl-parallel'],
+                legend: null,
+                components: [
+                    { name: 'C1', type: 'c', n1: 'n1', n2: 'gnd', param: 'C1' },
+                    { name: 'L1', type: 'l', n1: 'n1', n2: 'gnd', param: 'L1' }
+                ],
+                parameters: [
+                    { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 },
+                    { name: 'L1', label: 'L1', unit: 'mH', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e-3 }
                 ],
             },
             'rlc-series': {
@@ -462,6 +647,24 @@
                     { name: 'R2', label: 'R2', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e3 },
                     { name: 'C2', label: 'C2', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 0.1, scale: 1e-6 }
                 ],
+            },
+            'randles-rc': {
+                diagram: circuitDiagrams['randles-rc'],
+                legend: presetLegends['randles-rc'],
+                components: [
+                    { name: 'R1', type: 'r', n1: 'n1', n2: 'n2', param: 'R1' }, // Randles R_s
+                    { name: 'R2', type: 'r', n1: 'n2', n2: 'n3', param: 'R2' }, // Randles R_p
+                    { name: 'C1', type: 'c', n1: 'n2', n2: 'n3', param: 'C1' }, // Randles C_p
+                    { name: 'R3', type: 'r', n1: 'n3', n2: 'gnd', param: 'R3' }, // RC R
+                    { name: 'C2', type: 'c', n1: 'n3', n2: 'gnd', param: 'C2' }  // RC C
+                ],
+                parameters: [
+                    { name: 'R1', label: 'R1', unit: 'Ω', min: 1, max: 500, step: 1, value: 50, scale: 1 },
+                    { name: 'R2', label: 'R2', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 1.0, scale: 1e3 },
+                    { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 },
+                    { name: 'R3', label: 'R3', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 2.0, scale: 1e3 },
+                    { name: 'C2', label: 'C2', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 0.1, scale: 1e-6 }
+                ],
             }
         };
 
@@ -509,7 +712,6 @@
                 const groundNode = "gnd";
                 const f_start = 1;      // 1 Hz
                 const f_end = 1e6;    // 1 MHz
-                // ★ 修正: ハードコードされた 1000 を、プルダウンから取得するように変更
                 const steps = parseInt(plotStepsSelect.value, 10);
                 const scale = "log";
 
@@ -607,7 +809,6 @@
             // 5. プリセット変更時に周波数スライダーをリセット
             freqSlider.disabled = true;
             freqSlider.value = 0;
-            // freqSlider.max は setupFrequencySlider で設定されるため、ここでは不要
             freqSliderStep.textContent = `1.00 Hz`;
             freqInfoDiv.classList.add('hidden');
 
@@ -902,7 +1103,6 @@
                 return;
             }
 
-            // ★ 修正: ハードコードされた 999 ではなく、実際のデータ長から maxIndex を設定
             const maxIndex = currentPlotData.length - 1;
             freqSlider.max = maxIndex;
             freqSlider.disabled = false;
@@ -944,7 +1144,6 @@
 
         // --- イベントリスナー ---
         presetSelect.addEventListener('change', loadPreset);
-        // ★ 追加
         plotStepsSelect.addEventListener('change', runSimulation);
 
 
