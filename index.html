@@ -133,7 +133,6 @@
                     <label for="circuit-preset" class="block text-lg font-medium text-gray-700 mb-2">1. 回路プリセット</label>
                     <p class="text-sm text-gray-600 mb-2">代表的な回路をエディタに読み込みます。</p>
                     
-                    <!-- ★ 修正: 並び順を変更 -->
                     <select id="circuit-preset" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         <option value="r-only" selected>Rのみ</option>
                         <option value="c-only">Cのみ</option>
@@ -148,7 +147,9 @@
                         <option value="rlc-parallel">並列 RLC</option>
                         <option value="randles">Randles回路</option>
                         <option value="rc-rc-series">RC並列 x 2</option>
-                        <option value="randles-rc">Randles + 並列RC</option>
+                        <!-- ★ 修正 -->
+                        <option value="randles-rc">R+並列RC+並列RC</option>
+                        <option value="debye-circuit">Debye回路 (R || (R+C))</option>
                     </select>
                     
                     <label for="plot-steps" class="block text-sm font-medium text-gray-700 mt-4 mb-2">データ点数</label>
@@ -421,7 +422,22 @@
                     <circle class="circuit-node" cx="280" cy="50" r="3"/>
                     <circle class="circuit-node" cx="340" cy="50" r="3"/>
                     <circle class="circuit-node" cx="420" cy="50" r="3"/>
-                </svg>`
+                </svg>`,
+            'debye-circuit': `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100" class="max-w-full">
+                    <path class="circuit-line" d="M0 50h40 M160 50h40 M40 50v-30h120v30 M40 50v30h120v-30"/>
+                    <!-- R1 (Top branch) -->
+                    <use href="#component-resistor" class="circuit-component circuit-color-1" transform="translate(100 20)"/>
+                    <!-- R2 + C1 (Bottom branch) -->
+                    <path class="circuit-line" d="M40 80h40 M120 80h40"/> <!-- This line is for R2 and C1 -->
+                    <use href="#component-resistor" class="circuit-component circuit-color-2" transform="translate(80 80)"/>
+                    <use href="#component-capacitor" class="circuit-component circuit-color-3" transform="translate(120 80)"/>
+                    <!-- Nodes -->
+                    <circle class="circuit-node" cx="0" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="200" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="40" cy="50" r="3"/>
+                    <circle class="circuit-node" cx="160" cy="50" r="3"/>
+                </svg>`,
         };
 
         // --- 凡例のHTML定義 ---
@@ -482,7 +498,22 @@
                         <svg viewBox="-15 -15 30 30"><use href="#component-capacitor" class="circuit-component circuit-color-5"/></svg>
                         <span>C2</span>
                     </div>
-                </div>`
+                </div>`,
+            'debye-circuit': `
+                <div class="legend-html">
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-resistor" class="circuit-component circuit-color-1"/></svg>
+                        <span>R1 (並列)</span>
+                    </div>
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-resistor" class="circuit-component circuit-color-2"/></svg>
+                        <span>R2 (直列)</span>
+                    </div>
+                    <div class="legend-html-item">
+                        <svg viewBox="-15 -15 30 30"><use href="#component-capacitor" class="circuit-component circuit-color-3"/></svg>
+                        <span>C1 (直列)</span>
+                    </div>
+                </div>`,
         };
 
         
@@ -664,6 +695,20 @@
                     { name: 'C1', label: 'C1', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 },
                     { name: 'R3', label: 'R3', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 2.0, scale: 1e3 },
                     { name: 'C2', label: 'C2', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 0.1, scale: 1e-6 }
+                ],
+            },
+            'debye-circuit': {
+                diagram: circuitDiagrams['debye-circuit'],
+                legend: presetLegends['debye-circuit'],
+                components: [
+                    { name: 'R1', type: 'r', n1: 'n1', n2: 'gnd', param: 'R1' },
+                    { name: 'R2', type: 'r', n1: 'n1', n2: 'n_mid', param: 'R2' },
+                    { name: 'C1', type: 'c', n1: 'n_mid', n2: 'gnd', param: 'C1' }
+                ],
+                parameters: [
+                    { name: 'R1', label: 'R1 (並列)', unit: 'kΩ', min: 0.1, max: 10, step: 0.1, value: 5.0, scale: 1e3 },
+                    { name: 'R2', label: 'R2 (直列)', unit: 'Ω', min: 1, max: 1000, step: 1, value: 100, scale: 1 },
+                    { name: 'C1', label: 'C1 (直列)', unit: 'μF', min: 0.01, max: 10, step: 0.01, value: 1.0, scale: 1e-6 }
                 ],
             }
         };
